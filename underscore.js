@@ -17,6 +17,18 @@
   // Save bytes in the minified (but not gzipped) version:
   var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
 
+  // Use only methods really implemented by the browser and not other
+  // polyfills;  SAP Web Dynpro has wrong implementation of
+  // Function.prototype.bind, for example, which breaks usages of _.bind
+  // in backbone.js, at least.  Using the polyfill from Underscore is not
+  // worse than the other - both are JavaScript.
+  function getReallyNative(method) {
+    // The behaviour of the toString is not specified for native methods.
+    // However, the trick below works in Chrome, IE8-11 and Firefox.
+    var isNative = method && method.toString().indexOf('[native code]') > 0;
+    return isNative ? method : undefined;
+  }
+
   // Create quick reference variables for speed access to core prototypes.
   var
     push             = ArrayProto.push,
@@ -30,7 +42,8 @@
   var
     nativeIsArray      = Array.isArray,
     nativeKeys         = Object.keys,
-    nativeBind         = FuncProto.bind;
+    // Function.prototype.bind is known to be broken on SAP Web Dynpro pages.
+    nativeBind         = getReallyNative(FuncProto.bind);
 
   // Create a safe reference to the Underscore object for use below.
   var _ = function(obj) {
